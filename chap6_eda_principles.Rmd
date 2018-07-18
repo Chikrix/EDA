@@ -1,0 +1,34 @@
+---
+title: "Principles of Analytics Graphics"
+author: "Chidi Justice"
+date: "7/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+#### Introduction
+
+These principles were proposed by Edward Tufte in his book; Beautiful graphics. Not all these principles needs to be followed during exploratory visualisation, but its recommended to be followed for making final plots. 
+
+##### Show comparisons  
+Ask questions like "compared to what?" when faced with a given insight. So we can have a basis for what we're showing or some hypothesis. We should always be comparing at least two things. 
+
+##### Show causaulity, mechanism, and systematic structure   
+When inferring causuality, keep in mind the possible effect of cofounding factors. 
+
+##### Show multivariate data. 
+For every kind of study, there're usually many possible attributes we can measure. Data graphics should attempt to show as many of these as possible. Show plots with more than two variables. Multivariate plots can help us identify possible cofounding factors.
+
+##### Integrate the evidence you have  
+Completely integrate words, numbers, images, diagrams, different modes of presentation.The tool shouldn't drive the analysis.  
+
+##### Describe and document the evidence with appropriate labels, scales, sources and code source, etc.  
+Data graphics should tell the complete story itself. 
+
+##### Content is King 
+
+First think about whats the content you're trying to present
+
