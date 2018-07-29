@@ -1,0 +1,224 @@
+---
+title: "Exploratory Graphics"
+author: "Chidi Justice"
+date: "7/18/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Visualising data at the start of analysis can be important to understand basic properties of the data, find patterns in the data, suggest possible modeling strategies, and even possibly debug an analysis if an unexpected (not necessarily wrong) result is found, and untimately communicate the analysis.  Keep in mind that  exploratory graphics is not necessarily the final graphics. Exploratory graphics are made very quickly and usually when in the process of checking out the data. Basically, data analysis usually involves getting and cleaning up the data, checking out the data (exploratory graphics and computing statistics, etc), then answering our questions also using graphics (final graphics) and other statistics or modeling values (like predictions, etc). The goal of explortory graphics is to develop a personal understanding of the data and prioritize tasks for follow up.  
+
+#### Formulate the question  
+We'll be using data from the EPA on daily particulate matter measurements in NY over the course of 3 years (2015 - 2017). The EPA standard is that the annual mean averaged over 3 yrs cannot exceed 12 micrograms per cubic meter. The question we're interested in here is; *Are there counties in the NY that exceed the national standard for fine particulate matter (PM2.5) pollution?* 
+
+
+#### Read in the data  
+```{r echo = TRUE, message = FALSE, cache=FALSE, }
+library(downloader)
+library(dplyr)
+library(lubridate)
+library(maps)
+library(readr)
+library(ggplot2)
+library(lvplot)
+library(RColorBrewer)
+
+# Access necessary urls and data from this endpoint and uncomment the following lines https://www.epa.gov/outdoor-air-quality-data/download-daily-data
+
+#url  <- "https://www3.epa.gov/cgi-bin/broker?_service=data&_server=134.67.99.91&_port=4088&_sessionid=oPeCx8/WP52&_PROGRAM=dataprog.ad_viz_plotval_getdata.sas"
+#url2 <- "https://www3.epa.gov/cgi-bin/broker?_service=data&_server=134.67.99.91&_port=4089&_sessionid=zBFO48/WP52&_PROGRAM=dataprog.ad_viz_plotval_getdata.sas"
+#url3 <- "https://www3.epa.gov/cgi-bin/broker?_service=data&_server=134.67.99.91&_port=4086&_sessionid=k07TIDHWP52&_PROGRAM=dataprog.ad_viz_plotval_getdata.sas"
+        
+
+data_path  <- paste0("data/daily_pm25_2017")
+data_path2 <- "data/daily_pm25_2016"
+data_path3 <- "data/daily_pm25_2015"
+
+#download(url,  destfile = data_path,  quiet = FALSE)
+#download(url2, destfile = data_path2, quiet = FALSE)
+#download(url3, destfile = data_path3, quiet = FALSE)
+
+#read_lines(data_path,  n_max = 10)
+#read_lines(data_path2, n_max = 10)
+#ead_lines(data_path3, n_max = 10)
+
+## Read in all the necessary data
+column_types <- c("cdidciddccicicccdd")
+pm25_2017    <- read_csv(data_path, col_types = column_types)
+pm25_2016    <- read_csv(data_path2, col_types = column_types)
+pm25_2015    <- read_csv(data_path3, col_types = column_types)
+```
+
+Above, since the book didn't provide the necessary data, I went to the site directly and got the links for the data from the year 2015 - 2017 (3 years). It has several columns which may not be necessary for the purpose of the class.  
+
+#### Check packaging and run `str()`  
+Here I also organise the data to what I want it to be. Check the individual data and packaging and str as well.  
+```{r}
+#str(pm25_2015)
+#str(pm25_2016)
+#str(pm25_2017)
+
+pm25_2015_2017 <- rbind(pm25_2015, pm25_2016, pm25_2017) 
+
+#str(pm25_2015_2017)
+
+# change column names of data
+colnames(pm25_2015_2017) <- make.names(colnames(pm25_2015_2017))
+
+# pick the variables I need
+pollution <- pm25_2015_2017 %>%
+  select(Date, Daily.Mean.PM2.5 = Daily.Mean.PM2.5.Concentration, contains("SITE_L"), contains("COUNTY")) %>%
+  mutate(Date = parse_datetime(Date, "%m/%d/%Y"),
+         months = factor(months(Date)))
+
+str(pollution)
+```
+
+#### Look at the top and bottom of your data  
+```{r}
+head(pollution)
+tail(pollution)
+```
+#### Check your n's
+I want to check if I'm actually getting records for each day in the given years. So I expect to see data recorded 365 days or more for each year  
+```{r}
+pollution %>% 
+  mutate(Year = year(Date)) %>%
+  group_by(Year, COUNTY) %>%
+  count() %>%
+  arrange(desc(Year), n)
+```
+
+#### Simple summaries 
+*Five-number summaries:* This gives the minimum, 25^th^ percentile, median, 75^th^ percentile and maximum data. 
+```{r}
+fivenum(pollution$Daily.Mean.PM2.5)
+summary(pollution$Daily.Mean.PM2.5)
+```
+
+From the above, I can see that the overall median is 6.3, and not far from the mean. Both functions can be very useful.  
+
+*Boxplots: *
+Boxplots are a visual representation of fivenum summary with some extra data (outliers).  
+```{r}
+boxplot(pollution$Daily.Mean.PM2.5)
+
+ggplot(pollution, aes(y = Daily.Mean.PM2.5, x = "")) +
+  lvplot::geom_lv(outlier.colour = "red", alpha = 1, aes(fill = ..LV..)) 
+```
+
+From the boxplot, we see points 1.5 times above and below the the 25th and 75th percentile respectively. The box covers the IQR (25th to 75th quantile) range. It can be worth investigating the points that lie outside the box, the so called outliers.  
+```{r}
+outlier <- quantile(pollution$Daily.Mean.PM2.5, 0.75) * 1.5
+
+unusual_points <- pollution %>%
+  filter(Daily.Mean.PM2.5 >= outlier)
+
+map("county", "new york")
+with (unusual_points, points(SITE_LONGITUDE, SITE_LATITUDE))
+
+unusual_points %>%
+  group_by(COUNTY) %>%
+  summarise(count = n(),
+            avgPM2.5 = mean(Daily.Mean.PM2.5)) %>%
+  arrange(count)
+```
+
+There are a lot of counties where we had possible suspicious readings. We can decide if to include them or discard them depending on what we want becuase of their unsual very high readings, or to pursue why. Exploratory plots don't have to be pretty, they basically give us a sense of the data.  
+*Histograms: *  
+A histogram helps us see the distribution of our data.  
+```{r}
+plot(ecdf(pollution$Daily.Mean.PM2.5))
+abline(v = c(2, 10), h = 0.8)
+
+with(pollution, hist(Daily.Mean.PM2.5, col = "green"))
+abline(v = c(2, 8), col = "blue", lwd = 3)
+rug(pollution$Daily.Mean.PM2.5)
+
+with(pollution, hist(Daily.Mean.PM2.5, col = "blue", breaks = 100))
+rug(pollution$Daily.Mean.PM2.5)
+abline(v = median(pollution$Daily.Mean.PM2.5), col = "magenta", lwd = 3)
+abline(v = mean(pollution$Daily.Mean.PM2.5), col = "black", lwd = 3)
+abline(v = 12, col = "red", lwd = 3) # averages above allowed value
+legend(20, 2000,
+       legend = c("Median", "Mean", "PM2.5 recommended threshold"), 
+       col = c("magenta", "black", "red"),
+       lty = 1:2,
+       cex = 0.8,
+       lwd = 1
+       )
+```
+
+From the above, I see that a large cluster of the data is between 4 and 10 (like over 70% of the data lies between 2 and 10). We might want to investigate why we have so many counties with high pm2.5 daily average levels. You'll also notice the use of `abline` there, it makes it easy for me to draw lines and the likes on default R plots.   
+
+**Barplot: **  
+The Barplot is useful for summarising categorical data. 
+```{r}
+old_par = c(par()$mar)
+par(mar = c(5,7,3,3))
+m_colours <- c(brewer.pal(12, "Set3"), brewer.pal(6, "Accent"))
+table(pollution$COUNTY) %>%
+  barplot(col = m_colours, xpd = TRUE,  horiz = T, las = 2, border = "blue", xlim = c(0, 6000))
+#text(par("usr")[3], labels = unique(pollution$COUNTY), srt = 45, adj = c(1.1, 1.1), xpd = TRUE, cex = .9)
+par(mar = old_par) # reset previous margin setting
+```
+
+The above are some of the most common visualisations for one dimensional data during exploratory data analysis for initial plots. To visualise more than one dimensional data, ways we can visualise more than one variable includes;  
+- Overlaid or multiple 2D plots; conditioning plots (coplots): Coplots shows the relationship between two variables as a third variable (or more) changes. For example, using the data we have here, we might want to for each city pollution and mortality changes for each season of the year. In this example, pollution and mortality are the primary variables we're checking their relationship, and seasons of the year is the conditioning variable.  
+- We can add more dimensions using aestistics like color, shape and size. Like we can see how pollution and mortality (scatterplot) are related and add color/shape by season.  
+- Spinning / interactive plots: Spinning plots can be used to simulate 3D plots by allowing user cycle through many 2D projections of the plot go get that 3D feel. These can be useful to capture unusual structures in the data.   
+- Actual 3D plots: Generally not useful in most cases.
+
+**Multiple boxplots**  
+Multiple box plots can be useful to show the relationship between two variables of discrete types. For example  
+```{r}
+boxplot(Daily.Mean.PM2.5 ~ months, data = pollution, col = "red")
+
+pollution %>%
+  ggplot(aes(reorder(months, Daily.Mean.PM2.5, FUN = median), y = Daily.Mean.PM2.5)) +
+    geom_boxplot() + xlab("Months")
+```
+
+
+**Multiple histograms**  
+It can also be useful to plot multiple histograms side by side to compare the distributions and shapes. 
+```{r}
+old_mar = c(par()$mar)
+olf_mfrow = c(par()$mfrow)
+par(mfrow = c(2, 1), mar = c(4,4,2,4))
+hist(subset(pollution, months = "January")$Daily.Mean.PM2.5, col = "green", 
+     main = "Histogram for January", xlab = "Daily PM2.5 mean", breaks = seq(-5, 40, 2))
+#abline(v = ) would take more writing and filtering
+hist(subset(pollution, months = "December")$Daily.Mean.PM2.5, col = "green", 
+     main = "Histogram for December", xlab = "Daily PM2.5 mean", breaks = seq(-5, 40, 2))
+par(mfrow = olf_mfrow, mar = old_mar)
+
+## Using ggplot
+jan_dec <- pollution %>%
+  filter(months %in% c("January", "December"))
+
+mean_values <- jan_dec %>%
+  group_by(months) %>%
+  summarise(mean = mean(Daily.Mean.PM2.5))
+
+jan_dec %>%
+  ggplot(aes(Daily.Mean.PM2.5), colour = "green") +
+  geom_histogram(binwidth = 1) +
+  geom_vline(aes(xintercept = mean, colour = months), mean_values) +
+  facet_wrap(~months) 
+```
+
+Watch out for the maximum histogram we can plot at once before it gets hard to read. From the plots above, we can see that the mean distribution of Daily PM2.5 is similarly distributed for the months of January and December.  
+
+**Scatterplots** 
+For continuous variables, scatterplots are the most common visualisation technique. 
+```{r}
+# base R
+with(pollution, plot(COUNTY_CODE, Daily.Mean.PM2.5, col = months))
+abline(h = 12, lwd = 2, lty = 2)
+```
+
+We can also do multiple scatterplots at once. 
