@@ -1,0 +1,52 @@
+---
+title: "Plotting Systems"
+author: "Chidi Justice"
+date: "7/30/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE, cache = TRUE)
+```
+
+There are 3 main plotting systems in R, these are the Base R system, Lattice system and the ggplot2 system. 
+
+**Base R**  
+In base R, we use the plot function and draw on it, like layer different plots (text, lines, axis, points). 
+
+```{r}
+data("airquality")
+with(airquality, {
+  plot(Temp, Ozone, lines(loess.smooth(Temp, Ozone)))
+})
+```
+In the above plot, we draw the initial plot (like just calling the `plot` function) and then we drew the points, then the lines. With Base R plotting, its important to plan some things in advance, like margins, etc. It'll be great if the system could figure out these details. Another downside of this is that, it's not easy to communicate how a given plot was created, except listing all the set on commands in the order in which they were written, there's no grammar for going about base R graphics that states the intuition for the making graphics (one problem ggplot2 solves well).  
+```{r}
+data(cars)
+with(cars, plot(speed, dist))
+title("Speed vs Stopping distance")
+```
+
+
+**The Lattice System**  
+```{r}
+library(lattice)
+```
+
+Lattice system plots, unlike with Base R, plots all the things for a given plot at once with a single function call. Lattice plots are useful generally for conditioning plots. Things like margin, spacing are set automatically (unlike base R plots)  
+```{r}
+state <- data.frame(state.x77, region = state.region)
+head(state)
+xyplot(Life.Exp ~ Income | region, data = state, layout = c(4, 1))
+```
+
+In the above plot, we plotted Life.Exp against Income and conditioned by region. Its well spaced as well with proper margins. One downside with Lattice is that we can end up with many arguments in a plot function because we have to specify all possible requirements at once, it lacks that flexibility of base R. Also it can be difficult to customise panel functions and subscripts, also, once plot is created, you can't add to it.  
+
+**ggplot2 System**  
+This system takes the best from both plotting systems, like Lattice's margin and spacing fixes, flexibility to layer plots on top of each other, or ammend annotations and all that, and gives us a grammar for graphics, and is very flexible.  
+```{r}
+library(ggplot2)
+data(mpg)
+qplot(displ, hwy, data = mpg)
+```
+
