@@ -1,0 +1,55 @@
+---
+title: "Graphics Devices"
+author: "Chidi Justice"
+date: "7/30/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+A graphics device is something where you make your plot visible. Examples being;  
+* A window on your computer (screen device)  
+* A PDF file (file device)  
+* A PNG/JPEG/SVG file (file device)  
+
+When we make plots in R, it has to be sent to a particular graphic device. The most common device is the screen device. On a Mac screen, this is launched with the `quartz()` function, on Windows its the `windows()` function, and on Unix/Linux its the `x11()` function. Its important to think of how a plot we are making is going to be used to determine which graphic device it should be sent to. Use the `?Devices` function to see the supported devices. There are also other devices created by other uses available on Cran (R's package repository).  When making a plot, its important to put the following into consideration;  
+
+* Where will the plot be made? On the screen? In a file?  
+* How will the plot be used?
+* Is the plot for viewing temporarily on the screen?
+* Will it be presented in a web browser?
+* Will it eventually end up in a paper that might be printed?
+* Are you using it in a presentation?
+* Is there a large amount of data going into the plot? Or is it just a few points?
+* Do you need to be able to dynamically resize the graphic?
+* What graphics system will you use: base, lattice, or ggplot2? These generally cannot be mixed.  
+
+There are two ways plots are created, one involves calling the plotting function like `plot`, `xyplot`, etc, plot appears on the screen device, we annotate the plot if necessary. The second, which is used for other devices is that, we first launch the device, call the plotting function (it wouldn't appear on the screen device), annotate the graphics if necessary/possible, then explicitly close the device by calling `dev.off()` (very important).   
+```{r}
+# Screen device approach
+with(faithful, plot(eruptions, waiting)) # make the plot
+title("Old faithful Geyser data") # annotate the plot
+
+# file devices approach  
+pdf("mpplot.pdf")
+with(faithful, plot(eruptions, waiting)) # make the plot
+title("Old faithful Geyser data") # annotate the plot
+dev.off() # very important
+```
+
+There are two types of graphics devices to consider when working with file devices, these are Vector graphics and Bitmap graphics. Some common Vector formats are;  
+* Pdf: Useful for line types graphics, scales well, but not efficient if it has many points.  
+* Svg: Nice if we animations and interactivity in our plot, scales well (as it full name indicates), potentially used for plots on the web.  
+* Win.metafile: Works only on Windows.  
+* Postscript  
+
+Some common Bitmap formats includes;  
+* Png: Doesn't resize well, it can be read natively by many web browsers, its good for drawing plots with many many points, uses lossless compression. Good for line drawings or images with solid colors  
+* jpeg: Good for photographs or natural scenes, has same properties as png, but uses lossy compression.  
+* Tiff: Supports lossless compression. Creates .tiff images  
+* Bmp: Windows bitmap format.  
+
+We can open multiple graphic devices at once, but only one can be plotted on at once. To see the current active device, we use the function `dev.cur()`. Open devices starts with the number 2, no open device is numbered 1. We set the one we want to plot on using `dev.set(theNumberForDevice)`. We can also copy plots from one device to another using the function `dev.copy()` or `dev.copy2pdf()` to copy from screen to pdf. The copying function may not be identical to the original plot from which it was copied. 
+
