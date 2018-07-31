@@ -1,0 +1,112 @@
+---
+title: "The Base Plotting System"
+author: "Chidi Justice"
+date: "7/30/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+There are two main packages in used for Base plotting. They are the `graphics` package, which contains the functions like `hist`, `plot`, `boxplot`, etc. The other one is the `grDevices` packages, which contains all the devices like the `X11`, `PDF`, etc. 
+
+##### Histogram  
+```{r}
+library(datasets)
+hist(airquality$Ozone)
+```
+
+##### Boxplot  
+Boxplot uses a formula (~) to make plot, the way is y-axis ~ x-axis. 
+```{r}
+airquality <- transform(airquality, Month = factor(Month))
+boxplot(Ozone ~ Month, data = airquality, xlab = "Month", ylab = "Ozone (ppb)")
+```
+
+##### Scatterplots  
+```{r}
+with(airquality, plot(Wind, Ozone))
+```
+
+The plot function has several parameters that can be useful when making plots, use the `?par` function to see this and learn more about these modifiers. We can see the default values currently set when drawing, for example, say I want to check the current margin set, I'll do the following;  
+```{r}
+par("mar") # In the order bottom, left, top and right.
+```
+##### Other plots   
+The `plot` function doesn't make only a scatterplot. Some key annotation functions includes lines, points, text, title, mtext, axis. Example;  
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York city", col = "black"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+```
+
+In the above snippet, the second line plots the points for month 5, but does this on top of the plot of the original scatterplot. We can even add more functions. We can even go on and add more plots on the one already plotted.  
+```{r}
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York city", col = "black"))
+with(subset(airquality, Month == 5), points(Wind, Ozone, col = "blue"))
+with(subset(airquality, Month != 5), points(Wind, Ozone, col = "green"))
+legend("topright", pch = 1, col = c("blue", "green"), legend = c("May", "Other Months"))
+```
+
+##### Base plot with regression line  
+When we make a scatterplot, its common to want to draw a simple regression line through the data. This can be done using abline. We can fit a linear regression model using the `lm()` function, and plot this using abline  
+```{r}
+# draw initial scatterplot
+with(airquality, plot(Wind, Ozone, main = "Ozone and Wind in New York city", pch = 20))
+
+# Fits a linear model
+model <- lm(Ozone ~ Wind, data = airquality) # y-axis ~ x-axis
+
+# Draws regression line on plot
+abline(model, lwd = 2)
+
+```
+
+##### Multiple Base plots  
+We do this using `par()` function arguments - `mfrow` or `mfcol`, each takes two arguments which are used to specify the style of plotting, like the number of rows and columns our plots will occupy.  
+```{r}
+par(mfrow = c(1, 2)) # 1 row, 2 columns. So we want to draw two plots here
+with(airquality, {
+  plot(Wind, Ozone, main = "Ozone and Wind")
+  plot(Solar.R, Ozone, main = "Solar Radiation and Ozone")
+})
+```
+
+Its nice to know the possible adjustments to par function and set all these at once before making our plot.  
+```{r}
+par(mfrow = c(1, 3), margin = c(4, 4, 2, 1), oma = c(0, 0, 2, 0))
+with(airquality, {
+  plot(Wind, Ozone, main = "Ozone and Wind")
+  plot(Solar.R, Ozone, main = "Solar Radiation and Ozone")
+  plot(Temp, Ozone, main = "Temp and Ozone")
+  mtext("Ozone and Weather in NY", outer = TRUE)
+})
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
