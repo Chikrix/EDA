@@ -1,0 +1,133 @@
+---
+title: "Hierarchical Clustering"
+author: "Chidi Justice"
+date: "8/4/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE, warning=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(dplyr)
+```
+
+Cluster analysis is a technique for visualising high dimensional or multidimensional data. Its very simple to perform as well as very intuitive, its also a very quick way to understanding whats happening in a multidimensional dataset. The aim of cluster analysis is to organise observations that are similar into groups. The main question with clustering is;  
+* How do we define close?  
+* How do we group things?  
+* How do we visualise groupings?  
+* How do we inteprete the groupings?  
+
+All clustering techinques confront the issue of how we define when things are close or far apart, and there're many clustering techniques which differs in the ways in which they define closeness and how they group things.  
+
+#### Hierarchical clustering   
+
+This clustering technique involves organising observations in your data into some kind of hierarchy. A common hierarchical method is the agglomerative approach, this approach works bottom up, we start by taking each observation as an individual data point, then we lump them together into clusters little by little until eventually our data is one large cluster. Basically, from individual points, to many small clusters to one giant cluster. This is the agglomerative approach to clustering. This algorithm is recursive, the way it works is;  
+* Find the closest two points in your dataset  
+* Put them together and call them one point   
+* Use your new dataset with this new point and repeat  
+
+This method requires that you have a way of measuring the distance two points and also have a way of merging these two points into one, one benefit of this technique is that we generate a tree showing how things are related to each other, this is solely just a by product of runing the algorithm.  
+
+Defining closeness is the key aspect of clustering algorithm, if we don't use a good way of defining closeness for your data, we might not get any useful information from clustering. There are several distance or similarity metrics, the common being;  
+* Euclidean distance: This can be thought of in geometric terms as a straight line distance between two points.  
+* Correlation similarity: Similar in nature to Euclidean distance  
+* Manhattan distance 
+
+It's important to always pick the distance metric that always fits well with our data. Euclidean distance scales well with high dimensional data.  
+```{r}
+set.seed(1234)
+x <- rnorm(12, rep(1:3, each = 4), 0.2)
+y <- rnorm(12, rep(c(1,2,1), each = 4), 0.2)
+plot(x, y, col = "blue", pch = 19, cex = 1.5)
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+
+df <- data.frame(x, y)
+dist_matrix <- dist(df) # first compute the distance matrix of the data, by default, this uses the euclidean distance, which we can chnge using the method argument  
+rdistxy <- as.matrix(dist_matrix)
+
+# Remove the diagonal from consideration, cos its the smallest 0 values
+diag(rdistxy) <- diag(rdistxy) + 100000
+
+# find the index of points with the minimum distance
+ind <- which(rdistxy == min(rdistxy), arr.ind = TRUE)
+
+# Next step is to start drawing the tree as we select points we're grouping together
+par(mfrow = c(1, 2))
+
+plot(x, y, col = "blue", pch = 19, cex = 1.5)
+text(x + 0.05, y + 0.05, labels = as.character(1:12))
+points(x[ind[1, ]], y[ind[1, ]], col = "orange", pch = 19, cex = 1.5)
+
+hcluster <- dist(df) %>% hclust
+dendro <- as.dendrogram(hcluster)
+cutdendro <- cut(dendro, h = (hcluster$height[1] + 0.00001))
+plot(cutdendro$lower[[11]], yaxt = "n", main = "Begin building tree")
+```
+
+From the above, we were able to select the two closest point, and plot them together in the plot, and also merge them together in a dendogram, we'll continue doing this until we have one big tree, however, we ususally don't have to manually do all those unless, like computing the distance matrix (unless we're inventing our own clustering implementation). In R, to run the hierarchical clustering algorithm and generate the dendogram for us, we do the following;  
+```{r}
+hclustering <- dist(df) %>% hclust %>% plot
+```
+
+We can make the dendogram prettier with some modification to the `hclust` method and color codes to each cluster members by their membership.  
+```{r}
+mypclust <- function(hclust, lab = hclust$labels, lab.col = rep(1, length(hclust$labels)), hang = 0.1, ...) {
+  y = rep(hclust$height, 2)
+  x = as.numeric(hclust$merge)
+  y = y[which(x < 0)]
+  x = x[which(x < 0)]
+  x = abs(x)
+  y = y[order(x)]
+  x = x[order(x)]
+  plot(hclust, labels = FALSE, hang = hang, ...)
+  text(x = x, y = y[hclust$order] - (max(hclust$height) * hang), labels = lab[hclust$order], 
+       col = lab.col[hclust$order], srt = 90, adj = c(1, 0.5), xpd = NA, ...)
+}
+
+hclustering <- dist(df) %>% hclust 
+mypclust(hclustering, lab = rep(1:3, each = 4), lab.col = rep(1:3, each = 4))
+```
+
+
+##### Merging points    
+There are different ways two points are merged into a single point during hierarchical clustering, these includes methods like *complete*, *average*, *ward.D*, etc. Check ?hclust method argument for more of these methods. The way complete merging works is that we take all points in group one and all those in group two and find the points that are farthest apart, thats the distance between the two groups. The default method used by hclust is complete. For the average method, we're taking the average of coordinate values in each group and measures the distance between these two averages. Its important to note the result we get from hierarchical clustering is sensitive to the merging method we're using.  
+
+##### Heatmap  
+Heatmap is a handy way to visualise matrix data. How the heatmap works is that, it sorts the rows and columns of the matrix according to the clustering determined by the `hclust` method. Heatmap first treats the rows of the matrix as observations and calls `hclust` on them, then it does the same for the columns, in the end we get a dendogram associated with both the rows and columns of a matrix, which can be very handy to help us spot patterns in our data.  
+```{r}
+df %>% as.matrix %>% heatmap
+volcano %>% as.matrix %>% heatmap
+```
+
+Hierarchical clustering can be sensitive to when data points changes in the dataset, missing values, the distance metric (Euclidean, manhattan, etc) chosen, merging strategy (complete, average, ward, etc), changing the scale of points for one variable, so keep those in mind when using this technique. An issue with Hierarchical clustering is that choosing where to cut the tree to determine the number of clusters is not always obvious, so its recommended to use Hierarchical clustering only for exploration, once major patterns are found, then its best to delve into other tools or modeling.  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

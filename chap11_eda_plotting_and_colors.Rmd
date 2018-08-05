@@ -75,31 +75,31 @@ We can also add transparency (alpha) by setting the level in the `rgb` function 
 ```{r}
 cols <- brewer.pal(5, "Reds")
 
-getColorRampAlpha <- function(n, alpha, ...) {
+getColorRampAlpha <- function(n, ..., alpha = 1) {
   colorRamp = colorRampPalette(...)(n)
   paste(colorRamp, sprintf("%x", ceiling(255 * alpha)), sep="")
 }
 
-image(volcano, col = getColorRampAlpha(20, 0.5, cols))
+image(volcano, col = getColorRampAlpha(n = 20, cols))
 
 # The above was to add alpha to color ramp pallette. For individual colors, I can do
 colour = rgb(0, 0, 0, 0.15) # the last argument being the alpha
 plot(x, y, pch = 19, col = colour)
 ```
 
-So from the above, we can see that we have several options of rich colors depending on the kind of data we want to plot and what we want to show. The RColorBrewer package is a great package that helps us get the right pallette for either `colorRamp` or `colorRampPallette`. Transparency can be useful to clarify plots with many points. The choice of colors can improve the readability of our plot, so always keep this in mind. Make using RColorBrewer and the base functions a habit instead of just using base colors randomly.  To improve the initial plot used at the beginning  
+So from the above, we can see that we have several options of rich colors depending on the kind of data we want to plot and what we want to show. The RColorBrewer package is a great package that helps us get the right pallette for either `colorRamp` or `colorRampPallette`. Transparency can be useful to clarify plots with many points. The choice of colors can improve the readability of our plot, so always keep this in mind. Make using RColorBrewer and the base functions a habit instead of just using base colors randomly. To improve the initial plot used at the beginning  
 ```{r}
 set.seed(9)
 ## Used brewer.pal.info to find the pallette I'll use
 cols <- brewer.pal(n = 3, "Dark2")
 pal <- colorRampPalette(cols)
-col_pal <- pal(5)
+col_pal <- pal(3)
 
 x1 <- rnorm(30)
 y1 <- rnorm(30)
-df <- data.frame(x1, y1, col_cat = rep(col_pal, each = 6))
-plot(x1, y1, col = rep(col_pal, each = 6), pch = 19)
-legend("topright", legend = paste("Group", 1:5), col = col_pal, pch = 19, bty = "n")
+df <- data.frame(x1, y1)
+plot(x1, y1, col = rep(col_pal, each = 10), pch = 19)
+legend("topright", legend = paste("Group", 1:3), col = col_pal, pch = 19, bty = "n")
 ```
 
 
