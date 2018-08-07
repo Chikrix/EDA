@@ -12,6 +12,6 @@ https://github.com/Chikrix/exploratorium - My playground for practicing data sci
 
 The above outlines my strategy for data science with R (excluding Machine Learning). Similar projects exists using Python and Kotin, and for machine learning . 
 
-I believe its good, not necessarily to learn these things first, before diving into Machine learning and deep learning, and maths. 
+Learning path - 
 
 Domain Knowledge + (statistics, data acquisition and cleaning/preparation, EDA, visualisation) > Machine learning (DL, RL) > Mathematics > Building Data products . 
