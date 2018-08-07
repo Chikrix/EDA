@@ -10,7 +10,7 @@ https://github.com/Chikrix/rforLifeSciences - Notes and exercises following the 
 https://github.com/Chikrix/learn-ggplot2 -  Notes and exercise solutions reading the book "ggplot2: Elegant Graphics for Data Analysis" by Hadley Wickham .   
 https://github.com/Chikrix/exploratorium - My playground for practicing data science (acquiring, cleaning, EDA, visualisation, and some modeling). 
 
-The above outlines my strategy for data science with R (excluding Machine Learning). Similar projects using Python and Kotin, and for machine learning . 
+The above outlines my strategy for data science with R (excluding Machine Learning). Similar projects exists using Python and Kotin, and for machine learning . 
 
 I believe its good, not necessarily to learn these things first, before diving into Machine learning and deep learning, and maths. 
 
