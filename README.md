@@ -1,2 +1,2 @@
 # EDA
-Notes and exercises on Exploratory Data analysis
+My notes reading the book Exploratory Data Analysis with R by Roger Peng. 
