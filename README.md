@@ -14,4 +14,4 @@ The above outlines my strategy for data science with R (excluding Machine Learni
 
 Learning path - 
 
-Domain Knowledge + (statistics, data acquisition and cleaning/preparation, EDA, visualisation) > Machine learning (DL, RL) > Mathematics > Building Data products . 
+Domain Knowledge + (statistics, data acquisition and cleaning/preparation, EDA, visualisation) > Modeling/Machine learning (DL, RL) > Mathematics > Building Data products . 
